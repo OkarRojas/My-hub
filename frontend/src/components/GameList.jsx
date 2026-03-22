@@ -53,15 +53,17 @@ export default function GameList() {
   }
 
   const deleteGame = async (gameId) => {
-    try {
-      await axios.delete(`http://localhost:8000/games/${gameId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setGames(games.filter((g) => g.id !== gameId)); // Quita el juego de la lista sin recargar
-    } catch (err) {
-      console.error("Error deleting game:", err);
-    }
-  };
+  try {
+    const token = localStorage.getItem('token'); // ← obtenerlo aquí directamente
+    await axios.delete(`${API_URL}/games/${gameId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setGames(games.filter((g) => g.id !== gameId));
+  } catch (err) {
+    console.error('Error deleting game:', err);
+  }
+};
+
 
   return (
     <div className="game-list">

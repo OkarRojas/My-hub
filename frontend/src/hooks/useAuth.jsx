@@ -1,9 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
-
 const API_URL = 'http://localhost:8000';
-
 const AuthContext = createContext();
 
 export const useAuth = () => {
@@ -34,18 +32,17 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     const params = new URLSearchParams();
-    console.log('🔐 Intentando login...', email);
     params.append('username', email);
     params.append('password', password);
 
     const res = await axios.post(`${API_URL}/auth/login`, params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     });
+
     const { access_token } = res.data;
     localStorage.setItem('token', access_token);
     axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
+
     const userData = await axios.get(`${API_URL}/users/me`);
     setUser(userData.data);
     return userData.data;
@@ -56,9 +53,6 @@ export const AuthProvider = ({ children }) => {
     return login(email, password);
   };
 
-
-
-
   const logout = () => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
@@ -66,13 +60,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
-      register, 
-      logout, 
-      loading 
-    }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

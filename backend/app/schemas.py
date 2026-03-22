@@ -1,15 +1,28 @@
 from pydantic import BaseModel, EmailStr
+from typing import Optional
+from datetime import datetime
 
 class GameBase(BaseModel):
     title: str
     platform: str
 
 class GameCreate(GameBase):
-    pass
+    title: str
+    platform: str
+
+# app/schemas.py
+class GameResponse(BaseModel):
+    id: int
+    title: str
+    platform: str
 
 class GameRead(GameBase):
     id: int
-
+    title: str
+    platform: str
+    user_id: Optional[int]  # NUEVO: Para mostrar a qué usuario pertenece el juego
+    created_at: Optional[datetime] 
+    
     class Config:
         from_attributes = True  # antes from_orm=True en Pydantic v1
 

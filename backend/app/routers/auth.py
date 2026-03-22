@@ -15,7 +15,6 @@ from app.core.security import (
 )
 
 router = APIRouter(
-    prefix="/auth",
     tags=["auth"],
 )
 

@@ -1,45 +1,43 @@
 from fastapi import FastAPI
-from app.routers import health, games, auth
+from fastapi.middleware.cors import CORSMiddleware
+from app.routers import auth, games, users
+from app.db.session import ensure_schema_compatibility
 
-app = FastAPI(title="Game Hub API")
-
-app.include_router(health.router)
-app.include_router(games.router)
-app.include_router(auth.router)
-
-
-from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
-
-from app.db.session import get_db
-from app.db.models import Game
-from app.schemas import GameCreate, GameRead
-
-router = APIRouter(
-    prefix="/games",
-    tags=["games"],
+app = FastAPI(
+    title="MyHub API 🎮",
+    description="Gestor de bibliotecas de juegos",
+    version="1.0.0"
 )
 
-@router.get("/", response_model=List[GameRead])
-def list_games(db: Session = Depends(get_db)):
-    games = db.query(Game).all()
-    return games
+# CORS para frontend React
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],   # o ["*"] solo para desarrollo
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@router.get("/{game_id}", response_model=GameRead)
-def get_game(game_id: int, db: Session = Depends(get_db)):
-    game = db.query(Game).filter(Game.id == game_id).first()
-    if not game:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Game not found",
-        )
-    return game
+# Routers
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(games.router, prefix="/games", tags=["games"])
+app.include_router(users.router, prefix="/users", tags=["users"])
 
-@router.post("/", response_model=GameRead, status_code=status.HTTP_201_CREATED)
-def create_game(game_in: GameCreate, db: Session = Depends(get_db)):
-    game = Game(title=game_in.title, platform=game_in.platform)
-    db.add(game)
-    db.commit()
-    db.refresh(game)
-    return game
+
+@app.on_event("startup")
+def startup_compatibility_check():
+    ensure_schema_compatibility()
+
+# Health check
+@app.get("/")
+async def root():
+    return {
+        "message": "MyHub API funcionando 🚀",
+        "docs": "/docs",
+        "version": "1.0.0"
+    }
+
+# 404 handler
+@app.get("/health")
+async def health():
+    return {"status": "healthy"}

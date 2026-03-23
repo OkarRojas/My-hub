@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, games, users
 from app.db.session import engine, Base
-from app import models  # importa todos los modelos para que Base los registre
+from app.db import models  # importa todos los modelos para que Base los registre
 
 app = FastAPI(
     title="MyHub API 🎮",

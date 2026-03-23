@@ -3,6 +3,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 
+
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "")
@@ -25,3 +26,9 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+# Al final del session.py, después de definir Base
+from db.models import Base  # ajusta el import según tu estructura
+
+Base.metadata.create_all(bind=engine)

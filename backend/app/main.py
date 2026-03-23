@@ -13,7 +13,7 @@ app = FastAPI(
 # CORS para frontend React
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "https://TU-FRONTEND.onrender.com"],  # agrega tu URL de producción
+    allow_origins=["http://localhost:5173", "https://TU-FRONTEND.onrender.com", "https://okarrojas.github.io/"],  # agrega tu URL de producción
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

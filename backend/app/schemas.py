@@ -9,6 +9,8 @@ class GameBase(BaseModel):
 class GameCreate(GameBase):
     title: str
     platform: str
+    status: str = "pendiente"
+    score: Optional[int] = None 
 
 # app/schemas.py
 class GameResponse(BaseModel):
@@ -22,9 +24,15 @@ class GameRead(GameBase):
     platform: str
     user_id: Optional[int]  # NUEVO: Para mostrar a qué usuario pertenece el juego
     created_at: Optional[datetime] 
+    score: Optional[int] = None
+    status: str = "pendiente"
     
     class Config:
         from_attributes = True  # antes from_orm=True en Pydantic v1
+
+class GameStatusUpdate(BaseModel):
+    status: str
+
 
 # ========= USERS =========
 

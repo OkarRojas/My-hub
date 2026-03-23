@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: my-hub-backend
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: SECRET_KEY
+        value: supersecreto1234567890abcdefghij
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: 30

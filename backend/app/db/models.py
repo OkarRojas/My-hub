@@ -24,9 +24,12 @@ class Game(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     platform = Column(String, nullable=False)
+    status = Column(String, default="pendiente")
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="games")  # ← NUEVO
+    score = Column(Integer, nullable=True)  # ← NUEVO
+
 
 
 if __name__ == "__main__":

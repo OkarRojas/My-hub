@@ -13,7 +13,7 @@ export default function GameList() {
   const [editingGame, setEditingGame] = useState(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const API_URL = 'http://localhost:8000';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://my-hub-yc50.onrender.com';
 
   useEffect(() => {
     fetchGames();

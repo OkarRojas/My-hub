@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth, games, users
-from app.db.session import ensure_schema_compatibility
 
 app = FastAPI(
     title="MyHub API 🎮",
@@ -24,9 +23,6 @@ app.include_router(games.router, prefix="/games", tags=["games"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 
 
-@app.on_event("startup")
-def startup_compatibility_check():
-    ensure_schema_compatibility()
 
 # Health check
 @app.get("/")

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
+import './AuthForm.css';
 
 export default function AuthForm() {
   const [isLogin, setIsLogin] = useState(true);
@@ -39,63 +40,44 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="myhub-container">
-      <div className="myhub-card">
-        <h1 className="myhub-title">🎮 MyHub</h1>
-        <p className="myhub-subtitle">
+    <div className="auth-container">
+      <div className="auth-card">
+        <h1 className="auth-title">🎮 MyHub</h1>
+        <p className="auth-subtitle">
           {isLogin ? 'Inicia sesión en tu cuenta' : 'Crea tu cuenta gratis'}
         </p>
 
         {error && (
-          <div style={{
-            background: '#fee2e2',
-            color: '#dc2626',
-            padding: '1rem',
-            borderRadius: '8px',
-            marginBottom: '1.5rem',
-            borderLeft: '4px solid #dc2626'
-          }}>
+          <div className="auth-error-box">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '0.875rem', 
-              fontWeight: '500', 
-              color: '#374151', 
-              marginBottom: '0.5rem' 
-            }}>
+          <div className="auth-form-group">
+            <label className="auth-label">
               Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="myhub-input"
+              className="auth-input"
               placeholder="tu@email.com"
               required
               disabled={loading}
             />
           </div>
 
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ 
-              display: 'block', 
-              fontSize: '0.875rem', 
-              fontWeight: '500', 
-              color: '#374151', 
-              marginBottom: '0.5rem' 
-            }}>
+          <div className="auth-form-group">
+            <label className="auth-label">
               Contraseña
             </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="myhub-input"
+              className="auth-input"
               placeholder="••••••••"
               required
               disabled={loading}
@@ -104,24 +86,15 @@ export default function AuthForm() {
 
           <button 
             type="submit" 
-            className="myhub-btn"
+            className="auth-btn"
             disabled={loading}
-            style={loading ? { 
-              background: '#9ca3af', 
-              cursor: 'not-allowed',
-              opacity: 0.7 
-            } : {}}
+            data-loading={loading}
           >
             {loading ? 'Cargando...' : (isLogin ? 'Iniciar sesión' : 'Registrarse')}
           </button>
         </form>
 
-        <p style={{
-          marginTop: '2rem',
-          textAlign: 'center',
-          fontSize: '0.875rem',
-          color: '#6b7280'
-        }}>
+        <p className="auth-switch-text">
           {isLogin ? '¿No tienes cuenta?' : '¿Ya tienes cuenta?'}{' '}
           <button
             type="button"
@@ -129,14 +102,7 @@ export default function AuthForm() {
               setIsLogin(!isLogin);
               setError('');
             }}
-            style={{
-              color: '#3b82f6',
-              fontWeight: '600',
-              textDecoration: 'underline',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer'
-            }}
+            className="auth-switch-btn"
           >
             {isLogin ? 'Crea una ahora' : 'Inicia sesión'}
           </button>

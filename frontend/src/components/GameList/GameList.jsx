@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '../../hooks/useAuth';
 import axios from 'axios';
+import './GameList.css';
 
 export default function GameList() {
   const [games, setGames] = useState([]);
@@ -13,7 +14,7 @@ export default function GameList() {
   const [editingGame, setEditingGame] = useState(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL || 'https://my-hub-yc50.onrender.com';
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
     fetchGames();
@@ -105,8 +106,8 @@ export default function GameList() {
 
   if (loading) {
     return (
-      <div className="myhub-container">
-        <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '1.2rem' }}>
+      <div className="game-loading-container">
+        <div className="game-loading-text">
           Cargando juegos...
         </div>
       </div>
@@ -118,17 +119,16 @@ export default function GameList() {
       {/* HEADER */}
       <div className="game-header">
         <div>
-          <h1 className="myhub-title" style={{ margin: 0, fontSize: '2rem' }}>
+          <h1 className="game-header-title">
             🎮 Mis Juegos
           </h1>
-          <p style={{ color: '#6b7280', margin: 0 }}>
+          <p className="game-header-subtitle">
             Bienvenido, <strong>{user.email}</strong>
           </p>
         </div>
-        <div>
+        <div className="game-header-actions">
           <button
-            className="myhub-btn"
-            style={{ padding: '0.75rem 1.5rem', marginRight: '1rem' }}
+            className="game-primary-btn back-btn"
             onClick={() => navigate('/')}
           >
             ← Volver
@@ -140,11 +140,11 @@ export default function GameList() {
       </div>
 
       {/* FILTROS */}
-      <div style={{ display: 'flex', gap: '1rem', margin: '1rem 0', flexWrap: 'wrap' }}>
+      <div className="game-filters">
         <select
           value={filterStatus}
           onChange={(e) => setFilterStatus(e.target.value)}
-          style={{ padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #d1d5db', background: '#f9fafb' }}
+          className="game-select"
         >
           <option value="todos">🎮 Todos</option>
           <option value="pendiente">📋 Pendiente</option>
@@ -157,38 +157,37 @@ export default function GameList() {
           placeholder="🔍 Filtrar por plataforma..."
           value={filterPlatform}
           onChange={(e) => setFilterPlatform(e.target.value)}
-          className="myhub-input"
-          style={{ maxWidth: '250px' }}
+          className="game-input platform-filter-input"
         />
       </div>
 
       {/* FORMULARIO AGREGAR */}
       <div className="game-card">
-        <form onSubmit={handleSubmit} style={{ padding: '2rem' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr auto', gap: '1rem', alignItems: 'end' }}>
+        <form onSubmit={handleSubmit} className="game-form">
+          <div className="game-form-grid">
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.5rem' }}>
+              <label className="game-label">
                 Título del Juego
               </label>
               <input
                 type="text"
                 value={newGame.title}
                 onChange={(e) => setNewGame({ ...newGame, title: e.target.value })}
-                className="myhub-input"
+                className="game-input"
                 placeholder="Super Mario Bros"
                 required
                 disabled={creating}
               />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', color: '#374151', marginBottom: '0.5rem' }}>
+              <label className="game-label">
                 Plataforma
               </label>
               <input
                 type="text"
                 value={newGame.platform}
                 onChange={(e) => setNewGame({ ...newGame, platform: e.target.value })}
-                className="myhub-input"
+                className="game-input"
                 placeholder="NES, PC, PS5"
                 required
                 disabled={creating}
@@ -196,8 +195,7 @@ export default function GameList() {
             </div>
             <button
               type="submit"
-              className="myhub-btn"
-              style={{ padding: '1rem 2rem', height: 'fit-content' }}
+              className="game-primary-btn add-game-btn"
               disabled={creating}
             >
               {creating ? 'Agregando...' : 'Agregar Juego'}
@@ -206,67 +204,61 @@ export default function GameList() {
         </form>
 
         {/* LISTA DE JUEGOS */}
-        <div style={{ padding: '0 2rem 2rem' }}>
+        <div className="game-items-wrap">
           {filteredGames.length === 0 ? (
-            <p style={{
-              textAlign: 'center', color: '#6b7280', fontSize: '1.1rem',
-              padding: '3rem', background: '#f9fafb', borderRadius: '12px', margin: '1rem 0'
-            }}>
+            <p className="empty-games-msg">
               📭 No hay juegos aún. ¡Sé el primero en agregar uno!
             </p>
           ) : (
-            <div style={{ display: 'grid', gap: '1rem' }}>
+            <div className="game-items-grid">
               {filteredGames.map((game) => (
                 <div
                   key={game.id}
-                  className="myhub-card"
-                  style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}
+                  className="game-item-card"
                 >
                   {/* TÍTULO Y PLATAFORMA / MODO EDICIÓN */}
-                  <div style={{ minWidth: '200px' }}>
+                  <div className="game-info-col">
                     {editingGame?.id === game.id ? (
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <div className="game-edit-row">
                         <input
                           value={editingGame.title}
                           onChange={(e) => setEditingGame({ ...editingGame, title: e.target.value })}
-                          className="myhub-input"
-                          style={{ padding: '0.4rem', width: '150px' }}
+                          className="game-input inline-edit-input inline-edit-title"
                         />
                         <input
                           value={editingGame.platform}
                           onChange={(e) => setEditingGame({ ...editingGame, platform: e.target.value })}
-                          className="myhub-input"
-                          style={{ padding: '0.4rem', width: '100px' }}
+                          className="game-input inline-edit-input inline-edit-platform"
                         />
                         <button
                           onClick={() => updateGame(game.id)}
-                          style={{ background: '#d1fae5', color: '#065f46', border: 'none', borderRadius: '8px', padding: '0.4rem 0.8rem', cursor: 'pointer', fontWeight: '600' }}
+                          className="action-btn save-btn"
                         >
                           💾 Guardar
                         </button>
                         <button
                           onClick={() => setEditingGame(null)}
-                          style={{ background: '#f3f4f6', color: '#374151', border: 'none', borderRadius: '8px', padding: '0.4rem 0.8rem', cursor: 'pointer' }}
+                          className="action-btn cancel-btn"
                         >
                           ✖ Cancelar
                         </button>
                       </div>
                     ) : (
                       <div>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: '600', color: '#1f2937', marginBottom: '0.25rem' }}>
+                        <h3 className="game-title">
                           {game.title}
                         </h3>
-                        <p style={{ color: '#6b7280', fontSize: '1rem' }}>{game.platform}</p>
+                        <p className="game-platform">{game.platform}</p>
                       </div>
                     )}
                   </div>
 
                   {/* CONTROLES */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div className="game-controls">
                     <select
                       value={game.status || 'pendiente'}
                       onChange={(e) => updateStatus(game.id, e.target.value)}
-                      style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}
+                      className="game-select compact-select"
                     >
                       <option value="pendiente">📋 Pendiente</option>
                       <option value="jugando">🎮 Jugando</option>
@@ -277,7 +269,7 @@ export default function GameList() {
                     <select
                       value={game.score || ''}
                       onChange={(e) => updateScore(game.id, parseInt(e.target.value))}
-                      style={{ padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid #d1d5db', background: '#f9fafb', cursor: 'pointer' }}
+                      className="game-select compact-select"
                     >
                       <option value="">⭐ Nota</option>
                       {[1,2,3,4,5,6,7,8,9,10].map((n) => (
@@ -287,14 +279,14 @@ export default function GameList() {
 
                     <button
                       onClick={() => setEditingGame({ id: game.id, title: game.title, platform: game.platform })}
-                      style={{ background: '#dbeafe', color: '#1d4ed8', border: 'none', borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: '600' }}
+                      className="action-btn edit-btn"
                     >
                       ✏️ Editar
                     </button>
 
                     <button
                       onClick={() => deleteGame(game.id)}
-                      style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '8px', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: '600' }}
+                      className="action-btn delete-btn"
                     >
                       🗑️ Borrar
                     </button>

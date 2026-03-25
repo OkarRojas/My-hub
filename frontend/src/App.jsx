@@ -1,14 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import AuthForm from './components/AuthForm';
-import GameList from './components/GameList';
+import AuthForm from './components/AuthForm/AuthForm';
+import GameList from './components/GameList/GameList';
+import './App.css';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) {
     return (
-      <div className="myhub-container">
-        <div style={{ textAlign: 'center', color: '#6b7280', fontSize: '1.2rem' }}>
+      <div className="app-loading-container">
+        <div className="app-loading-text">
           Cargando...
         </div>
       </div>

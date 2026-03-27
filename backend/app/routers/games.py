@@ -1,4 +1,5 @@
 from typing import List
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.db.session import get_db
@@ -7,6 +8,7 @@ from app.schemas import GameCreate, GameRead, GameStatusUpdate
 from app.dependencies import get_current_user
 
 router = APIRouter(tags=["games"])
+logger = logging.getLogger(__name__)
 
 @router.get("/", response_model=List[GameRead])
 def list_games(
@@ -14,7 +16,9 @@ def list_games(
     current_user: User = Depends(get_current_user)
 ):
     # Solo juegos del usuario logueado
-    return db.query(Game).filter(Game.user_id == current_user.id).all()
+    games = db.query(Game).filter(Game.user_id == current_user.id).all()
+    logger.info("[games.list] user_id=%s count=%s", current_user.id, len(games))
+    return games
 
 @router.get("/{game_id}", response_model=GameRead)
 def get_game(game_id: int, db: Session = Depends(get_db)):
@@ -32,14 +36,28 @@ def create_game(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    hours_played = game_in.hours_played if game_in.hours_played is not None else game_in.game_time
+    logger.info(
+        "[games.create] user_id=%s title=%s platform=%s",
+        current_user.id,
+        game_in.title,
+        game_in.platform,
+
+    )
     game = Game(
         title=game_in.title,
         platform=game_in.platform,
+        status=game_in.status,
+        score=game_in.score,
+        hours_played=hours_played or 0.0,
+
+        rating=float(game_in.score) if game_in.score is not None else 0.0,
         user_id=current_user.id  # ← Asignar al usuario logueado
     )
     db.add(game)
     db.commit()
     db.refresh(game)
+    logger.info("[games.create] created game_id=%s user_id=%s", game.id, game.user_id)
     return game
 
 
@@ -105,6 +123,7 @@ def update_game_score(
         raise HTTPException(status_code=400, detail="Score debe ser entre 1 y 10")
 
     game.score = score
+    game.rating = float(score)
     db.commit()
     db.refresh(game)
     return game
@@ -126,6 +145,14 @@ def update_game(
 
     game.title = game_in.title
     game.platform = game_in.platform
+    game.status = game_in.status
+    game.hours_played = (
+        game_in.hours_played
+        if game_in.hours_played is not None
+        else (game_in.game_time if game_in.game_time is not None else game.hours_played)
+    )
+    game.score = game_in.score
+    game.rating = float(game_in.score) if game_in.score is not None else game.rating
     db.commit()
     db.refresh(game)
     return game

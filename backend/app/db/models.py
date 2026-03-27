@@ -1,4 +1,5 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, Float
+from sqlalchemy.orm import relationship
 from app.db.session import Base
 from sqlalchemy.orm import relationship
 from datetime import timezone, datetime
@@ -25,6 +26,9 @@ class Game(Base):
     title = Column(String, nullable=False)
     platform = Column(String, nullable=False)
     status = Column(String, default="pendiente")
+    hours_played = Column(Float, default=0.0)      # 👈 nuevo
+    rating = Column(Float, default=0.0)            # 👈 nuevo (0-10)
+    player_count = Column(String, default="")      # 
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     user = relationship("User", back_populates="games")  # ← NUEVO

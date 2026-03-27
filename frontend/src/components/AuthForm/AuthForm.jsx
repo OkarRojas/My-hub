@@ -13,28 +13,44 @@ export default function AuthForm() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    console.log('[AuthForm] user changed', user);
     if (user) {
-      navigate('/games');
+      console.log('[AuthForm] user is present. navigating to /dashboard');
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('[AuthForm.handleSubmit] start', {
+      isLogin,
+      email,
+    });
     setError('');
     setLoading(true);
 
     try {
       if (isLogin) {
+        console.log('[AuthForm.handleSubmit] calling login');
         await login(email, password);
+        console.log('[AuthForm.handleSubmit] login resolved');
       } else {
+        console.log('[AuthForm.handleSubmit] calling register');
         await register(email, password);
+        console.log('[AuthForm.handleSubmit] register resolved');
       }
     } catch (err) {
-      console.error('Login error:', err.response);
+      console.error('[AuthForm.handleSubmit] auth error', {
+        message: err?.message,
+        status: err?.response?.status,
+        data: err?.response?.data,
+        code: err?.code,
+      });
       const errorMsg = err.response?.data?.detail || 
                        'Error de conexión. Verifica email/contraseña.';
       setError(errorMsg);
     } finally {
+      console.log('[AuthForm.handleSubmit] finally reached. setLoading(false)');
       setLoading(false);
     }
   };

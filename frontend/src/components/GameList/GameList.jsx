@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { API_CONFIG } from '../../config/api';
 import axios from 'axios';
 import './GameList.css';
 
@@ -14,7 +15,6 @@ export default function GameList() {
   const [editingGame, setEditingGame] = useState(null);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
   useEffect(() => {
     fetchGames();
@@ -22,7 +22,19 @@ export default function GameList() {
 
   const fetchGames = async () => {
     try {
-      const res = await axios.get(`${API_URL}/games/`);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.warn('[GameList.fetchGames] token missing, skipping fetch');
+        setGames([]);
+        return;
+      }
+
+      const res = await axios.get(`${API_CONFIG.BASE_URL}/games/`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('[GameList.fetchGames] loaded games', {
+        count: Array.isArray(res.data) ? res.data.length : 0,
+      });
       setGames(res.data);
     } catch (error) {
       console.error('Error fetching games:', error);
@@ -35,7 +47,15 @@ export default function GameList() {
     e.preventDefault();
     setCreating(true);
     try {
-      await axios.post(`${API_URL}/games/`, newGame);
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No auth token found');
+      }
+
+      const created = await axios.post(`${API_CONFIG.BASE_URL}/games/`, newGame, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('[GameList.handleSubmit] game created', created.data);
       setNewGame({ title: '', platform: '' });
       await fetchGames();
     } catch (error) {
@@ -48,7 +68,7 @@ export default function GameList() {
   const deleteGame = async (gameId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/games/${gameId}`, {
+      await axios.delete(`${API_CONFIG.BASE_URL}/games/${gameId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setGames(games.filter((g) => g.id !== gameId));
@@ -61,7 +81,7 @@ export default function GameList() {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `${API_URL}/games/${gameId}/status?status=${newStatus}`,
+        `${API_CONFIG.BASE_URL}/games/${gameId}/status?status=${newStatus}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -75,7 +95,7 @@ export default function GameList() {
     try {
       const token = localStorage.getItem('token');
       await axios.patch(
-        `${API_URL}/games/${gameId}/score?score=${newScore}`,
+        `${API_CONFIG.BASE_URL}/games/${gameId}/score?score=${newScore}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -89,7 +109,7 @@ export default function GameList() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API_URL}/games/${gameId}`,
+        `${API_CONFIG.BASE_URL}/games/${gameId}`,
         editingGame,
         { headers: { Authorization: `Bearer ${token}` } }
       );

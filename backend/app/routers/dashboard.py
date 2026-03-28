@@ -12,14 +12,23 @@ def get_my_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    games = db.query(Game).filter(Game.user_id == current_user.id).all()
+    games = (
+        db.query(Game)
+        .filter(Game.user_id == current_user.id)
+        .order_by(Game.created_at.desc(), Game.id.desc())
+        .all()
+    )
 
     total_hours = sum(g.hours_played or 0 for g in games)
-    recent_games = sorted(games, key=lambda g: g.id, reverse=True)[:3]
+    recent_games = games[:3]
 
     # Historial de horas por juego (para la gráfica)
     play_history = [
-        {"name": g.title[:4], "value": g.hours_played or 0}
+        {
+            "name": g.title[:4],
+            "value": g.hours_played or 0,
+            "created_at": g.created_at.isoformat() if g.created_at else None,
+        }
         for g in games
     ]
 
@@ -30,7 +39,8 @@ def get_my_stats(
             "code": g.platform,
             "rating": g.score if g.score is not None else (g.rating or 0),
             "status": g.status,
-            "player_count": g.player_count or "N/A"
+            "player_count": g.player_count or "N/A",
+            "created_at": g.created_at.isoformat() if g.created_at else None,
         }
         for g in games
     ]
@@ -43,6 +53,8 @@ def get_my_stats(
             {
                 "symbol": g.platform,
                 "amount": g.title,
+                "hours_played": g.hours_played or 0,
+                "score": g.score if g.score is not None else (g.rating or 0),
                 "value": f"{g.hours_played or 0}h",
                 "change": str(g.score if g.score is not None else (g.rating or 0)),
                 "tone": "asset-tone-btc"

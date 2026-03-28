@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth';
 import AuthForm from './components/AuthForm/AuthForm';
 import GameList from './components/GameList/GameList';
 import Dashboard from './components/dashboard/dashboard';
+import Home from './components/home/home';
 import './App.css';
 
 function ProtectedRoute({ children }) {
@@ -19,11 +20,11 @@ function ProtectedRoute({ children }) {
 function AppContent() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
+      <Route path="/" element={<Home />} />
       <Route path="/login" element={<AuthForm />} />
       <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
       <Route path="/games" element={<ProtectedRoute><GameList /></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to="/login" />} />
+      <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
 }

@@ -24,8 +24,8 @@ class GameRead(GameBase):
     id: int
     title: str
     platform: str
-    user_id: Optional[int]  # NUEVO: Para mostrar a qué usuario pertenece el juego
-    created_at: Optional[datetime] 
+    user_id: Optional[int] = None  # NUEVO: Para mostrar a qué usuario pertenece el juego
+    created_at: Optional[datetime] = None
     hours_played: Optional[float] = 0.0  # NUEVO: Para mostrar las horas jugadas
     score: Optional[int] = None  # NUEVO: Para mostrar la puntuación del juego
     status: str = "pendiente"

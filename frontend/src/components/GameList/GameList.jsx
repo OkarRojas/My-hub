@@ -13,6 +13,11 @@ export default function GameList() {
   const [filterStatus, setFilterStatus] = useState('todos');
   const [filterPlatform, setFilterPlatform] = useState('');
   const [editingGame, setEditingGame] = useState(null);
+  const [searchQuery, setSearchQuery] = useState('');  // 🔍 Nueva búsqueda
+  const [searchResults, setSearchResults] = useState([]);  // 🔍 Resultados
+  const [searchLoading, setSearchLoading] = useState(false);  // 🔍 Loading
+  const [searchError, setSearchError] = useState('');
+  const [gamesError, setGamesError] = useState('');
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -20,12 +25,41 @@ export default function GameList() {
     fetchGames();
   }, []);
 
+  // 🔍 Handler de búsqueda con debounce
+  useEffect(() => {
+    if (!searchQuery || searchQuery.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timeoutId = setTimeout(async () => {
+      setSearchLoading(true);
+      setSearchError('');
+      try {
+        const res = await axios.get(
+          `${API_CONFIG.BASE_URL}/games/search?query=${encodeURIComponent(searchQuery)}`
+        );
+        setSearchResults(res.data.results || []);
+      } catch (err) {
+        console.error('Error buscando juegos:', err);
+        setSearchResults([]);
+        setSearchError('No se pudo completar la busqueda. Intenta de nuevo.');
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300); // debounce 300ms
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery]);
+
   const fetchGames = async () => {
     try {
+      setGamesError('');
       const token = localStorage.getItem('token');
       if (!token) {
         console.warn('[GameList.fetchGames] token missing, skipping fetch');
         setGames([]);
+        setGamesError('No hay sesion activa. Inicia sesion nuevamente.');
         return;
       }
 
@@ -38,8 +72,49 @@ export default function GameList() {
       setGames(res.data);
     } catch (error) {
       console.error('Error fetching games:', error);
+      setGames([]);
+      setGamesError('No se pudieron cargar tus juegos. Recarga la pagina o inicia sesion de nuevo.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🔍 Seleccionar juego de la búsqueda
+  const selectGame = async (game) => {
+    if (!game.rawg_id && game.game_id) {
+      setNewGame({
+        title: game.name,
+        platform: game.platforms?.map(p => p.name).join(', ') || game.slug || '',
+        rawg_id: null,
+        game_id: game.game_id,
+        image: game.image,
+        genres: game.genres,
+        description: game.description
+      });
+      setSearchResults([]);
+      setSearchQuery('');
+      return;
+    }
+
+    try {
+      const res = await axios.get(`${API_CONFIG.BASE_URL}/games/detail/${game.rawg_id}`);
+      const fullGame = res.data;
+      
+      // Llenar formulario automáticamente
+      setNewGame({
+        title: fullGame.name,
+        platform: fullGame.platforms?.map(p => p.name).join(', ') || '',
+        rawg_id: fullGame.rawg_id,
+        game_id: fullGame.id || null,
+        image: fullGame.image,
+        genres: fullGame.genres,
+        description: fullGame.description
+      });
+      
+      setSearchResults([]);  // Ocultar resultados
+      setSearchQuery('');    // Limpiar búsqueda
+    } catch (err) {
+      console.error('Error cargando detalles del juego:', err);
     }
   };
 
@@ -51,8 +126,15 @@ export default function GameList() {
       if (!token) {
         throw new Error('No auth token found');
       }
+      if (!newGame.rawg_id && !newGame.game_id) {
+        throw new Error('Primero selecciona un juego desde la búsqueda');
+      }
 
-      const created = await axios.post(`${API_CONFIG.BASE_URL}/games/`, newGame, {
+      const created = await axios.post(`${API_CONFIG.BASE_URL}/games/add-to-library`, null, {
+        params: {
+          rawg_id: newGame.rawg_id || undefined,
+          game_id: newGame.game_id || undefined,
+        },
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log('[GameList.handleSubmit] game created', created.data);
@@ -64,6 +146,8 @@ export default function GameList() {
       setCreating(false);
     }
   };
+
+  // ... resto de funciones (deleteGame, updateStatus, etc.) permanecen IGUALES ...
 
   const deleteGame = async (gameId) => {
     try {
@@ -108,12 +192,12 @@ export default function GameList() {
   const updateGame = async (gameId) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.put(
+      const response = await axios.put(
         `${API_CONFIG.BASE_URL}/games/${gameId}`,
         editingGame,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setGames(games.map((g) => g.id === gameId ? { ...g, ...editingGame } : g));
+      setGames(games.map((g) => g.id === gameId ? { ...g, ...response.data } : g));
       setEditingGame(null);
     } catch (err) {
       console.error('Error updating game:', err);
@@ -136,7 +220,7 @@ export default function GameList() {
 
   return (
     <div className="game-list">
-      {/* HEADER */}
+      {/* HEADER - IGUAL */}
       <div className="game-header">
         <div>
           <h1 className="game-header-title">
@@ -149,7 +233,7 @@ export default function GameList() {
         <div className="game-header-actions">
           <button
             className="game-primary-btn back-btn"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/dashboard')}
           >
             ← Volver
           </button>
@@ -159,7 +243,7 @@ export default function GameList() {
         </div>
       </div>
 
-      {/* FILTROS */}
+      {/* FILTROS - IGUAL */}
       <div className="game-filters">
         <select
           value={filterStatus}
@@ -181,38 +265,76 @@ export default function GameList() {
         />
       </div>
 
-      {/* FORMULARIO AGREGAR */}
+      {/* FORMULARIO MEJORADO CON BÚSQUEDA 🔍 */}
       <div className="game-card">
         <form onSubmit={handleSubmit} className="game-form">
           <div className="game-form-grid">
+            {/* 🔍 NUEVA BARRA DE BÚSQUEDA */}
+            <div className="search-section">
+              <label className="game-label">🔍 Buscar juego</label>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Elden Ring, Zelda, Mario..."
+                className="game-input search-input"
+              />
+              {/* Resultados de búsqueda */}
+              {searchLoading && <div className="search-loading">🔎 Buscando...</div>}
+              {!searchLoading && searchError && <div className="search-loading">{searchError}</div>}
+              {!searchLoading && !searchError && searchQuery.length >= 2 && searchResults.length === 0 && (
+                <div className="search-loading">No se encontraron resultados.</div>
+              )}
+              {searchResults.length > 0 && (
+                <div className="search-results">
+                  {searchResults.map((game) => (
+                    <div
+                      key={game.rawg_id}
+                      className="search-result-item"
+                      onClick={() => selectGame(game)}
+                    >
+                      <img 
+                        src={game.image} 
+                        alt={game.name} 
+                        className="search-result-image" 
+                      />
+                      <div>
+                        <h4>{game.name}</h4>
+                        <p>{game.genres?.map(g => g.name).join(', ')}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Campos automáticos */}
             <div>
-              <label className="game-label">
-                Título del Juego
-              </label>
+              <label className="game-label">Título</label>
               <input
                 type="text"
                 value={newGame.title}
                 onChange={(e) => setNewGame({ ...newGame, title: e.target.value })}
                 className="game-input"
-                placeholder="Super Mario Bros"
-                required
+                placeholder="Se rellena automáticamente"
                 disabled={creating}
+                readOnly
               />
             </div>
+            
             <div>
-              <label className="game-label">
-                Plataforma
-              </label>
+              <label className="game-label">Plataformas</label>
               <input
                 type="text"
                 value={newGame.platform}
                 onChange={(e) => setNewGame({ ...newGame, platform: e.target.value })}
                 className="game-input"
-                placeholder="NES, PC, PS5"
-                required
+                placeholder="Se rellena automáticamente"
                 disabled={creating}
+                readOnly
               />
             </div>
+
             <button
               type="submit"
               className="game-primary-btn add-game-btn"
@@ -223,20 +345,19 @@ export default function GameList() {
           </div>
         </form>
 
-        {/* LISTA DE JUEGOS */}
+        {/* LISTA DE JUEGOS - IGUAL */}
         <div className="game-items-wrap">
-          {filteredGames.length === 0 ? (
+          {gamesError ? (
+            <p className="empty-games-msg">{gamesError}</p>
+          ) : filteredGames.length === 0 ? (
             <p className="empty-games-msg">
-              📭 No hay juegos aún. ¡Sé el primero en agregar uno!
+              📭 No hay juegos aún. ¡Busca y agrega el primero!
             </p>
           ) : (
             <div className="game-items-grid">
               {filteredGames.map((game) => (
-                <div
-                  key={game.id}
-                  className="game-item-card"
-                >
-                  {/* TÍTULO Y PLATAFORMA / MODO EDICIÓN */}
+                <div key={game.id} className="game-item-card">
+                  {/* ... resto del JSX igual que tenías ... */}
                   <div className="game-info-col">
                     {editingGame?.id === game.id ? (
                       <div className="game-edit-row">
@@ -265,15 +386,12 @@ export default function GameList() {
                       </div>
                     ) : (
                       <div>
-                        <h3 className="game-title">
-                          {game.title}
-                        </h3>
+                        <h3 className="game-title">{game.title}</h3>
                         <p className="game-platform">{game.platform}</p>
                       </div>
                     )}
                   </div>
 
-                  {/* CONTROLES */}
                   <div className="game-controls">
                     <select
                       value={game.status || 'pendiente'}

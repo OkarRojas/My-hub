@@ -417,7 +417,7 @@ function Dashboard() {
               </div>
               <div className="assets-grid">
                 {filteredRecentGames.length === 0 ? (
-                  <p style={{ color: '#94a3b8' }}>
+                  <p style={{ color: '#003c90' }}>
                     {searchQuery.trim() ? 'No hay coincidencias en recientes.' : 'No hay juegos recientes.'}
                   </p>
                 ) : (

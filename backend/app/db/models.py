@@ -1,12 +1,8 @@
-from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, Float
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, ForeignKey, Integer, String, Boolean, DateTime, Float, Text, JSON, func
 from app.db.session import Base
-from sqlalchemy.orm import relationship
-from datetime import timezone, datetime
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-from app.db.session import Base
+
 
 class User(Base):
     __tablename__ = "users"
@@ -16,23 +12,46 @@ class User(Base):
     hashed_password = Column(String, nullable=False)
     is_active = Column(Boolean, default=True)
 
-    games = relationship("Game", back_populates="user")  # ← NUEVO
+    user_games = relationship("UserGame", back_populates="user")
 
 
 class Game(Base):
     __tablename__ = "games"
-
+    
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    platform = Column(String, nullable=False)
-    status = Column(String, default="pendiente")
-    hours_played = Column(Float, default=0.0)      # 👈 nuevo
-    rating = Column(Float, default=0.0)            # 👈 nuevo (0-10)
-    player_count = Column(String, default="")      # 
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    user = relationship("User", back_populates="games")  # ← NUEVO
-    score = Column(Integer, nullable=True)  # ← NUEVO
+    # Legacy columns kept for backward compatibility with existing SQLite schema.
+    title = Column(String, nullable=False, default="")
+    platform = Column(String, nullable=False, default="")
+    rawg_id = Column(Integer, unique=True, index=True, nullable=True)
+    name = Column(String(255), index=True)
+    slug = Column(String(100), index=True, nullable=True)
+    image = Column(String(500), nullable=True)
+    description = Column(Text, nullable=True)
+    rating = Column(String(10), nullable=True)
+    released = Column(DateTime, nullable=True)
+    genres = Column(JSON, nullable=True)
+    platforms = Column(JSON, nullable=True)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    # Relación con UserGame
+    user_games = relationship("UserGame", back_populates="game")
+
+class UserGame(Base):
+    __tablename__ = "user_games"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    game_id = Column(Integer, ForeignKey("games.id"))
+    hours_played = Column(Integer, default=0)
+    status = Column(String(50), default="playing")
+    review = Column(Text, nullable=True)
+    favorite = Column(Integer, default=0)
+    progress = Column(Integer, default=0)
+    created_at = Column(DateTime, server_default=func.now())
+    
+    # Relaciones
+    game = relationship("Game", back_populates="user_games")
+    user = relationship("User", back_populates="user_games")
 
 
 

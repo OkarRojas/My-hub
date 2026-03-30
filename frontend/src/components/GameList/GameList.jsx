@@ -208,6 +208,24 @@ export default function GameList() {
     .filter((g) => filterStatus === 'todos' || g.status === filterStatus)
     .filter((g) => filterPlatform === '' || g.platform.toLowerCase().includes(filterPlatform.toLowerCase()));
 
+  const getPlatformLabel = (game) => {
+    const platform = typeof game?.platform === 'string' ? game.platform.trim() : '';
+    if (platform) return platform;
+
+    const slug = typeof game?.slug === 'string' ? game.slug.trim() : '';
+    if (slug) return slug;
+
+    if (Array.isArray(game?.platforms) && game.platforms.length > 0) {
+      const names = game.platforms
+        .map((p) => p?.name)
+        .filter((name) => typeof name === 'string' && name.trim())
+        .join(', ');
+      if (names) return names;
+    }
+
+    return 'Sin plataforma';
+  };
+
   if (loading) {
     return (
       <div className="game-loading-container">
@@ -387,7 +405,7 @@ export default function GameList() {
                     ) : (
                       <div>
                         <h3 className="game-title">{game.title}</h3>
-                        <p className="game-platform">{game.platform}</p>
+                        <p className="game-platform">{getPlatformLabel(game)}</p>
                       </div>
                     )}
                   </div>

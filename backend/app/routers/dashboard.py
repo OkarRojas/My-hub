@@ -53,6 +53,7 @@ def get_my_stats(
         "recent_games": [
             {
                 "symbol": game.slug or "?",
+                "platform": game.platform or game.slug or "Sin plataforma",
                 "amount": game.name or "Unknown",
                 "hours_played": ug.hours_played or 0,
                 "score": ug.favorite or 0,

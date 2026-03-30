@@ -60,6 +60,17 @@ def _get_rawg_api_key() -> str:
     return os.getenv("RAWG_API_KEY", "")
 
 
+def _extract_platform_text(platforms: list[dict] | None) -> str:
+    if not platforms:
+        return ""
+    names = [
+        p.get("name").strip()
+        for p in platforms
+        if isinstance(p, dict) and isinstance(p.get("name"), str) and p.get("name").strip()
+    ]
+    return ", ".join(names)
+
+
 @router.get("/search")
 async def search_games(query: str, page: int = 1, db: Session = Depends(get_db)):
     """Busca juegos en RAWG y devuelve resultados"""
@@ -165,7 +176,9 @@ async def get_game_detail(rawg_id: int, db: Session = Depends(get_db)):
     # Guardar en BD
     game = Game(
         title=game_data["name"],
-        platform=game_data.get("slug") or "unknown",
+        platform=_extract_platform_text(
+            [{"name": p["platform"]["name"]} for p in game_data.get("platforms", [])]
+        ) or game_data.get("slug") or "unknown",
         rawg_id=game_data["id"],
         name=game_data["name"],
         slug=game_data["slug"],
@@ -200,10 +213,13 @@ def list_user_games(
     
     result = []
     for ug, game in user_games:
+        platform_text = _extract_platform_text(game.platforms)
+        platform_legacy = (game.platform or "").strip() if isinstance(game.platform, str) else ""
+        platform_slug = (game.slug or "").strip() if isinstance(game.slug, str) else ""
         result.append({
             "id": ug.id,
             "title": game.name or game.title,
-            "platform": game.slug or game.platform or "unknown",
+            "platform": platform_text or platform_legacy or platform_slug or "Sin plataforma",
             "user_id": ug.user_id,
             "status": ug.status,
             "hours_played": ug.hours_played,

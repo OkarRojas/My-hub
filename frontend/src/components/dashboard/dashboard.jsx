@@ -421,22 +421,28 @@ function Dashboard() {
                     {searchQuery.trim() ? 'No hay coincidencias en recientes.' : 'No hay juegos recientes.'}
                   </p>
                 ) : (
-                  filteredRecentGames.map((asset, i) => (
-                    <article key={i} className="asset-card">
-                      <div className="asset-card-head">
-                        <div>
-                          <p className="asset-amount">{asset.amount}</p>
-                          <p>{asset.hours_played !== undefined ? asset.hours_played : 'N/A'}h</p>
-                          
+                  filteredRecentGames.map((asset, i) => {
+                    const platformLabel = asset.platform || asset.symbol || 'Sin plataforma';
+                    const hoursLabel = Number.isFinite(Number(asset.hours_played))
+                      ? `${asset.hours_played}h`
+                      : '0h';
+
+                    return (
+                      <article key={i} className="asset-card">
+                        <div className="asset-card-head">
+                          <div>
+                            <p className="asset-amount">{asset.amount}</p>
+                            <p>{hoursLabel}</p>
+                          </div>
+                          <FiMoreVertical className="asset-menu-icon" />
                         </div>
-                        <FiMoreVertical className="asset-menu-icon" />
-                      </div>
-                      <div className="asset-card-foot">
-                        <div className={`asset-chip ${asset.tone}`}>{asset.symbol}</div>
-                        <p className="asset-change">{asset.change}</p>
-                      </div>
-                    </article>
-                  ))
+                        <div className="asset-card-foot">
+                          <div className={`asset-chip ${asset.tone}`}>{platformLabel}</div>
+                          <p className="asset-change">{hoursLabel}</p>
+                        </div>
+                      </article>
+                    );
+                  })
                 )}
               </div>
             </div>

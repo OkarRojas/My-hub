@@ -210,7 +210,18 @@ export default function GameList() {
 
   const getPlatformLabel = (game) => {
     const platform = typeof game?.platform === 'string' ? game.platform.trim() : '';
-    if (platform) return platform;
+    if (platform) {
+      const platformParts = platform
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean);
+
+      if (platformParts.length > 1) {
+        return `${platformParts[0]} etc`;
+      }
+
+      return platformParts[0] || platform;
+    }
 
     const slug = typeof game?.slug === 'string' ? game.slug.trim() : '';
     if (slug) return slug;
@@ -218,9 +229,15 @@ export default function GameList() {
     if (Array.isArray(game?.platforms) && game.platforms.length > 0) {
       const names = game.platforms
         .map((p) => p?.name)
-        .filter((name) => typeof name === 'string' && name.trim())
-        .join(', ');
-      if (names) return names;
+        .filter((name) => typeof name === 'string' && name.trim());
+
+      if (names.length > 1) {
+        return `${names[0]} etc`;
+      }
+
+      if (names.length === 1) {
+        return names[0];
+      }
     }
 
     return 'Sin plataforma';

@@ -38,10 +38,18 @@ def get_my_stats(
         {
             "name": game.name or "Unknown",
             "code": game.slug or "N/A",
-            "rating": float(game.rating) if isinstance(game.rating, str) and game.rating else 0,
+            "rating": ug.favorite or 0,
             "status": ug.status,
             "player_count": str(ug.progress or 0),
             "created_at": ug.created_at.isoformat() if ug.created_at else None,
+            "activity": {
+                "playtime": game.playtime,
+                "ratings_count": game.ratings_count,
+                "added": game.added,
+                "reddit_count": game.reddit_count,
+                "twitch_count": game.twitch_count,
+                "youtube_count": game.youtube_count
+            }
         }
         for ug, game in user_games
     ]

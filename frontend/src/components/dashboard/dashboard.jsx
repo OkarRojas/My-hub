@@ -145,6 +145,27 @@ function Dashboard() {
     });
   }, [stats.recent_games, searchQuery]);
 
+  // Format activity number (e.g., 1000 -> "1K", 1500000 -> "1.5M")
+  const formatActivityNumber = (num) => {
+    if (!num) return 'No disponible';
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  // Get activity summary for display
+  const getActivityDisplay = (game) => {
+    if (!game.activity) return 'No disponible';
+    
+    const metrics = [];
+    if (game.activity.added) metrics.push(`${formatActivityNumber(game.activity.added)} añadidos`);
+    if (game.activity.playtime) metrics.push(`${game.activity.playtime}h promedio`);
+    if (game.activity.ratings_count) metrics.push(`${formatActivityNumber(game.activity.ratings_count)} ratings`);
+    
+    if (metrics.length === 0) return 'No disponible';
+    return metrics.join(' • ');
+  };
+
   const totalReviewPages = useMemo(() => {
     return Math.max(1, Math.ceil(visibleReviews.length / REVIEWS_PER_PAGE));
   }, [visibleReviews.length]);
@@ -437,7 +458,7 @@ function Dashboard() {
                           <FiMoreVertical className="asset-menu-icon" />
                         </div>
                         <div className="asset-card-foot">
-                          <div className={`asset-chip ${asset.tone}`}>{platformLabel}</div>
+                          <div className={`asset-chip ${asset.tone}`}>{platformLabel.split(',')[0]}, Etc</div>
                           <p className="asset-change">{hoursLabel}</p>
                         </div>
                       </article>
@@ -515,7 +536,11 @@ function Dashboard() {
                           </td>
                           <td className="market-price">{row.status}</td>
                           <td className="market-change">{row.rating}</td>
-                          <td className="market-cap">{row.player_count}</td>
+                          <td className="market-cap">
+                            <div style={{ fontSize: '0.85em', color: '#cbd5e1' }}>
+                              {getActivityDisplay(row)}
+                            </div>
+                          </td>
                           <td className="market-watch-cell">
                           <button type="button" className="market-watch-btn">
                             <FiStar className="dashboard-icon" />

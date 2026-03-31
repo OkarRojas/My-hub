@@ -24,14 +24,35 @@ class GameRead(GameBase):
     id: int
     title: str
     platform: str
-    user_id: Optional[int] = None  # NUEVO: Para mostrar a qué usuario pertenece el juego
+    user_id: Optional[int] = None
     created_at: Optional[datetime] = None
-    hours_played: Optional[float] = 0.0  # NUEVO: Para mostrar las horas jugadas
-    score: Optional[int] = None  # NUEVO: Para mostrar la puntuación del juego
+    hours_played: Optional[float] = 0.0
+    score: Optional[int] = None
     status: str = "pendiente"
     
     class Config:
-        from_attributes = True  # antes from_orm=True en Pydantic v1
+        from_attributes = True
+
+
+class GameActivityMetrics(BaseModel):
+    """Activity metrics from RAWG for a game"""
+    playtime: Optional[int] = None  # Average playtime in hours
+    ratings_count: Optional[int] = None  # Total number of ratings
+    added: Optional[int] = None  # How many users added it
+    reddit_count: Optional[int] = None  # Reddit mentions
+    twitch_count: Optional[int] = None  # Twitch mentions
+    youtube_count: Optional[int] = None  # YouTube mentions
+    
+    class Config:
+        from_attributes = True
+
+
+class GameWithMetrics(GameRead):
+    """Game with activity metrics"""
+    activity: GameActivityMetrics = GameActivityMetrics()
+    
+    class Config:
+        from_attributes = True
 
 class GameStatusUpdate(BaseModel):
     status: str

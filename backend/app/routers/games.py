@@ -187,7 +187,13 @@ async def get_game_detail(rawg_id: int, db: Session = Depends(get_db)):
         rating=str(game_data["rating"]),
         released=datetime.fromisoformat(game_data["released"]) if game_data["released"] else None,
         genres=[{"id": g["id"], "name": g["name"]} for g in game_data["genres"]],
-        platforms=[{"name": p["platform"]["name"]} for p in game_data["platforms"]]
+        platforms=[{"name": p["platform"]["name"]} for p in game_data["platforms"]],
+        playtime=game_data.get("playtime"),
+        ratings_count=game_data.get("ratings_count"),
+        added=game_data.get("added"),
+        reddit_count=game_data.get("reddit_count"),
+        twitch_count=game_data.get("twitch_count"),
+        youtube_count=game_data.get("youtube_count")
     )
     
     db.add(game)

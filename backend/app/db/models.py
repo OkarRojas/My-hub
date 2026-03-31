@@ -31,6 +31,13 @@ class Game(Base):
     released = Column(DateTime, nullable=True)
     genres = Column(JSON, nullable=True)
     platforms = Column(JSON, nullable=True)
+    # Activity fields from RAWG
+    playtime = Column(Integer, nullable=True)  # Average playtime in hours
+    ratings_count = Column(Integer, nullable=True)  # Total number of ratings
+    added = Column(Integer, nullable=True)  # How many users added it
+    reddit_count = Column(Integer, nullable=True)  # Reddit mentions
+    twitch_count = Column(Integer, nullable=True)  # Twitch mentions
+    youtube_count = Column(Integer, nullable=True)  # YouTube mentions
     created_at = Column(DateTime, server_default=func.now())
     
     # Relación con UserGame
